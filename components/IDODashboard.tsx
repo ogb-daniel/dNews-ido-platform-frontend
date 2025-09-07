@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,33 +14,106 @@ import { Coins, Clock, Target, TrendingUp, Wallet, ExternalLink } from "lucide-r
 import { toast } from "@/hooks/use-toast"
 
 export function IDODashboard() {
-  const { idoData, loading, purchaseTokens } = useIDO()
+  const { 
+    idoData, 
+    loading, 
+    purchaseTokens, 
+    claimTokens, 
+    claimRefund, 
+    approvepUSD, 
+    getpUSDBalance, 
+    getpUSDAllowance 
+  } = useIDO()
   const { isConnected, account } = useWallet()
   const [pUSDAmount, setPUSDAmount] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pUSDBalance, setPUSDBalance] = useState("0")
+  const [pUSDAllowance, setPUSDAllowance] = useState("0")
+  const [needsApproval, setNeedsApproval] = useState(false)
 
   const calculateTokenAmount = (pUSD: string) => {
     if (!pUSD || isNaN(Number.parseFloat(pUSD))) return "0"
     return (Number.parseFloat(pUSD) / Number.parseFloat(idoData.tokenPrice)).toFixed(2)
   }
 
+  // Fetch pUSD balance and allowance
+  useEffect(() => {
+    if (isConnected && account) {
+      const fetchBalances = async () => {
+        try {
+          const [balance, allowance] = await Promise.all([
+            getpUSDBalance(),
+            getpUSDAllowance()
+          ])
+          setPUSDBalance(balance)
+          setPUSDAllowance(allowance)
+        } catch (error) {
+          console.error("Error fetching balances:", error)
+        }
+      }
+      fetchBalances()
+    }
+  }, [isConnected, account, getpUSDBalance, getpUSDAllowance])
+
+  // Check if approval is needed when amount changes
+  useEffect(() => {
+    if (pUSDAmount && pUSDAllowance) {
+      const amount = parseFloat(pUSDAmount)
+      const allowance = parseFloat(pUSDAllowance)
+      setNeedsApproval(amount > allowance)
+    } else {
+      setNeedsApproval(false)
+    }
+  }, [pUSDAmount, pUSDAllowance])
+
+  const handleApprove = async () => {
+    if (!pUSDAmount || !isConnected) return
+
+    setIsSubmitting(true)
+    try {
+      const tx = await approvepUSD(pUSDAmount)
+      if (tx) {
+        // Refresh allowance after approval
+        const newAllowance = await getpUSDAllowance()
+        setPUSDAllowance(newAllowance)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handlePurchase = async () => {
     if (!pUSDAmount || !isConnected) return
 
     const amount = Number.parseFloat(pUSDAmount)
-    if (amount < 10) {
+    
+    // Check balance
+    if (amount > parseFloat(pUSDBalance)) {
       toast({
-        title: "Invalid Amount",
-        description: "Minimum contribution: 10 PAU Dollar (pUSD)",
+        title: "Insufficient Balance",
+        description: "You don't have enough pUSD tokens",
         variant: "destructive",
       })
       return
     }
 
-    if (amount > 2000) {
+    // Validate contribution limits  
+    const currentContribution = parseFloat(idoData.userContribution)
+    const newTotal = currentContribution + amount
+    
+    if (amount < 10) {
       toast({
         title: "Invalid Amount",
-        description: "Maximum contribution: 2000 PAU Dollar (pUSD)",
+        description: "Minimum contribution: 10 pUSD",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (newTotal > 2000) {
+      toast({
+        title: "Invalid Amount",
+        description: `Maximum total contribution: 2000 pUSD. You can contribute ${(2000 - currentContribution).toFixed(2)} more pUSD.`,
         variant: "destructive",
       })
       return
@@ -48,8 +121,39 @@ export function IDODashboard() {
 
     setIsSubmitting(true)
     try {
-      await purchaseTokens(pUSDAmount)
-      setPUSDAmount("")
+      const tx = await purchaseTokens(pUSDAmount)
+      if (tx) {
+        setPUSDAmount("")
+        // Refresh balances
+        const [newBalance, newAllowance] = await Promise.all([
+          getpUSDBalance(),
+          getpUSDAllowance()
+        ])
+        setPUSDBalance(newBalance)
+        setPUSDAllowance(newAllowance)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleClaim = async () => {
+    if (!isConnected) return
+
+    setIsSubmitting(true)
+    try {
+      await claimTokens()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleRefund = async () => {
+    if (!isConnected) return
+
+    setIsSubmitting(true)
+    try {
+      await claimRefund()
     } finally {
       setIsSubmitting(false)
     }
@@ -154,19 +258,29 @@ export function IDODashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {isConnected && (
+                <div className="p-3 rounded-lg bg-muted/50 border">
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Your pUSD Balance:</span>
+                    <span className="font-medium">{parseFloat(pUSDBalance).toLocaleString()} pUSD</span>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="pusd-amount">PAU Dollar (pUSD) Amount</Label>
+                  <Label htmlFor="pusd-amount">pUSD Amount</Label>
                   <Input
                     id="pusd-amount"
                     type="number"
-                    placeholder="Enter PAU Dollar amount"
+                    placeholder="Enter pUSD amount"
                     value={pUSDAmount}
                     onChange={(e) => setPUSDAmount(e.target.value)}
                     min="10"
                     max="2000"
                     step="1"
-                    aria-label="PAU Dollar amount to purchase"
+                    disabled={idoData.phase !== "ACTIVE"}
+                    aria-label="pUSD amount to purchase"
                   />
                 </div>
                 <div className="space-y-2">
@@ -199,20 +313,85 @@ export function IDODashboard() {
                 </div>
               )}
 
-              <Button
-                onClick={handlePurchase}
-                disabled={!isConnected || !pUSDAmount || isSubmitting || loading}
-                className="w-full animate-pulse-glow"
-                size="lg"
-              >
-                {isSubmitting ? "Processing..." : !isConnected ? "Connect Wallet First" : "Purchase Tokens"}
-              </Button>
-
-              {Number.parseFloat(pUSDAmount) > 0 && Number.parseFloat(pUSDAmount) < 10 && (
-                <p className="text-sm text-destructive">Minimum contribution: 10 PAU Dollar (pUSD)</p>
+              {/* Purchase/Approval Buttons */}
+              {idoData.phase === "ACTIVE" && (
+                <div className="space-y-2">
+                  {needsApproval ? (
+                    <Button
+                      onClick={handleApprove}
+                      disabled={!isConnected || !pUSDAmount || isSubmitting || loading}
+                      className="w-full"
+                      size="lg"
+                      variant="outline"
+                    >
+                      {isSubmitting ? "Approving..." : "Approve pUSD"}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handlePurchase}
+                      disabled={!isConnected || !pUSDAmount || isSubmitting || loading}
+                      className="w-full animate-pulse-glow"
+                      size="lg"
+                    >
+                      {isSubmitting ? "Processing..." : !isConnected ? "Connect Wallet First" : "Purchase Tokens"}
+                    </Button>
+                  )}
+                </div>
               )}
-              {Number.parseFloat(pUSDAmount) > 2000 && (
-                <p className="text-sm text-destructive">Maximum contribution: 2000 PAU Dollar (pUSD)</p>
+
+              {/* Claim Tokens Button */}
+              {idoData.phase === "CLAIM" && parseFloat(idoData.userTokens) > 0 && (
+                <Button
+                  onClick={handleClaim}
+                  disabled={!isConnected || isSubmitting}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isSubmitting ? "Claiming..." : "Claim TRUTH Tokens"}
+                </Button>
+              )}
+
+              {/* Refund Button */}
+              {idoData.phase === "ENDED" && parseFloat(idoData.totalRaised) < parseFloat(idoData.softCap) && parseFloat(idoData.userContribution) > 0 && (
+                <Button
+                  onClick={handleRefund}
+                  disabled={!isConnected || isSubmitting}
+                  className="w-full"
+                  size="lg"
+                  variant="destructive"
+                >
+                  {isSubmitting ? "Processing..." : "Claim Refund"}
+                </Button>
+              )}
+
+              {/* IDO Not Active Message */}
+              {idoData.phase === "PREPARATION" && (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground">IDO hasn't started yet</p>
+                </div>
+              )}
+
+              {idoData.phase === "ENDED" && parseFloat(idoData.totalRaised) >= parseFloat(idoData.softCap) && (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground">IDO has ended successfully</p>
+                </div>
+              )}
+
+              {/* Validation Messages */}
+              {pUSDAmount && (
+                <>
+                  {parseFloat(pUSDAmount) > 0 && parseFloat(pUSDAmount) < 10 && (
+                    <p className="text-sm text-destructive">Minimum contribution: 10 pUSD</p>
+                  )}
+                  {parseFloat(pUSDAmount) > parseFloat(pUSDBalance) && (
+                    <p className="text-sm text-destructive">Insufficient pUSD balance</p>
+                  )}
+                  {parseFloat(pUSDAmount) + parseFloat(idoData.userContribution) > 2000 && (
+                    <p className="text-sm text-destructive">
+                      Maximum total contribution: 2000 pUSD. You can contribute {(2000 - parseFloat(idoData.userContribution)).toFixed(2)} more pUSD.
+                    </p>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -230,11 +409,17 @@ export function IDODashboard() {
             <CardContent className="space-y-4">
               {isConnected ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
+                      <div className="text-sm text-muted-foreground">pUSD Balance</div>
+                      <div className="text-2xl font-bold text-accent">
+                        {Number.parseFloat(pUSDBalance).toLocaleString()} pUSD
+                      </div>
+                    </div>
                     <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                       <div className="text-sm text-muted-foreground">Your Contribution</div>
                       <div className="text-2xl font-bold text-primary">
-                        {Number.parseFloat(idoData.userContribution).toLocaleString()} PAU Dollar (pUSD)
+                        {Number.parseFloat(idoData.userContribution).toLocaleString()} pUSD
                       </div>
                     </div>
                     <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
