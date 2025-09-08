@@ -48,10 +48,22 @@ export default function HomePage() {
                 Live on Sepolia
               </Badge>
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    window.open("https://twitter.com/ogb404", "_blank")
+                  }
+                >
                   <Twitter className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    window.open("https://github.com/ogb-daniel", "_blank")
+                  }
+                >
                   <Github className="h-4 w-4" />
                 </Button>
               </div>
