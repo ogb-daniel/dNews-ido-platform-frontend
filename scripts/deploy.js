@@ -15,19 +15,25 @@ async function main() {
     (await ethers.provider.getBalance(deployer.address)).toString()
   );
 
-  // Deployment parameters
+  // PAU Dollar token decimals (we know it's 0 from previous checks)
+  const pUSDAddress = "0xDd7639e3920426de6c59A1009C7ce2A9802d0920";
+  const pUSDDecimals = 0;
+  
+  console.log("pUSD token decimals:", pUSDDecimals);
+
+  // Deployment parameters - use correct decimals for pUSD amounts
+  // Since pUSD has 0 decimals, prices must be whole numbers
   const TOTAL_SUPPLY = ethers.parseEther("1000000000"); // 1 billion TRUTH tokens
-  const TOKEN_PRICE = ethers.parseEther("0.15"); // 0.15 pUSD per TRUTH token
-  const TOKENS_FOR_SALE = ethers.parseEther("150000000"); // 150 million TRUTH for IDO
-  const SOFT_CAP = ethers.parseEther("7500"); // 7,500 pUSD
-  const HARD_CAP = ethers.parseEther("22500"); // 22,500 pUSD
-  const MIN_CONTRIBUTION = ethers.parseEther("10"); // 10 pUSD minimum
-  const MAX_CONTRIBUTION = ethers.parseEther("2000"); // 2,000 pUSD maximum
-  const SALE_DURATION = 7 * 24 * 60 * 60; // 7 days
+  const TOKEN_PRICE = ethers.parseUnits("1", pUSDDecimals); // 1 pUSD per TRUTH token (whole number)
+  const TOKENS_FOR_SALE = ethers.parseEther("150000000"); // 150 million TRUTH for IDO (TRUTH has 18 decimals)
+  const SOFT_CAP = ethers.parseUnits("7500", pUSDDecimals); // 7,500 pUSD
+  const HARD_CAP = ethers.parseUnits("22500", pUSDDecimals); // 22,500 pUSD  
+  const MIN_CONTRIBUTION = ethers.parseUnits("10", pUSDDecimals); // 10 pUSD minimum
+  const MAX_CONTRIBUTION = ethers.parseUnits("2000", pUSDDecimals); // 2,000 pUSD maximum
+  const SALE_DURATION = 30 * 24 * 60 * 60; // 30 days
 
   // Use existing PAU Dollar token
   console.log("\n=== Using Existing PAU Dollar (pUSD) Token ===");
-  const pUSDAddress = "0xDd7639e3920426de6c59A1009C7ce2A9802d0920";
   console.log("PAU Dollar address:", pUSDAddress);
 
   // Deploy TRUTH Token
@@ -85,19 +91,19 @@ async function main() {
   );
 
   // Check pUSD balance (existing token, no minting needed)
-  console.log("Checking pUSD balance...");
-  try {
-    const pUSDBalance = await pUSD.balanceOf(deployer.address);
-    console.log(
-      "✅ Deployer pUSD balance:",
-      ethers.formatEther(pUSDBalance),
-      "pUSD"
-    );
-  } catch (error) {
-    console.log(
-      "⚠️ Could not check pUSD balance (contract may not be accessible)"
-    );
-  }
+  // console.log("Checking pUSD balance...");
+  // try {
+  //   const pUSDBalance = await pUSD.balanceOf(deployer.address);
+  //   console.log(
+  //     "✅ Deployer pUSD balance:",
+  //     ethers.formatEther(pUSDBalance),
+  //     "pUSD"
+  //   );
+  // } catch (error) {
+  //   console.log(
+  //     "⚠️ Could not check pUSD balance (contract may not be accessible)"
+  //   );
+  // }
 
   // Create deployment info object
   const deploymentInfo = {
@@ -148,7 +154,7 @@ async function main() {
     },
     deploymentTime: new Date().toISOString(),
     gasUsed: {
-      pUSD: (await pUSD.deploymentTransaction()).gasLimit?.toString() || "N/A",
+      pUSD: "N/A",
       truthToken:
         (await truthToken.deploymentTransaction()).gasLimit?.toString() ||
         "N/A",

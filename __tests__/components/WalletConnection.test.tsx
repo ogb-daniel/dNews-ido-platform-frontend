@@ -1,9 +1,21 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { WalletConnection } from '@/components/WalletConnection';
 import { WalletContext } from '@/contexts/WalletContext';
+import type { WalletContextType } from '@/contexts/WalletContext';
 import { ReactNode } from 'react';
 
-const mockWalletContextValue = {
+// Mock ethers
+jest.mock("ethers", () => ({
+  BrowserProvider: jest.fn(() => ({
+    send: jest.fn(),
+    getNetwork: jest.fn(),
+    getBalance: jest.fn(),
+    getSigner: jest.fn(),
+  })),
+  formatEther: jest.fn((wei) => '1.5000'),
+}));
+
+const mockWalletContextValue: WalletContextType = {
   isConnected: false,
   account: null,
   balance: '0',
@@ -16,7 +28,7 @@ const mockWalletContextValue = {
 
 const MockWalletProvider = ({ children, value = mockWalletContextValue }: { 
   children: ReactNode; 
-  value?: typeof mockWalletContextValue;
+  value?: WalletContextType;
 }) => (
   <WalletContext.Provider value={value}>
     {children}
@@ -55,7 +67,7 @@ describe('WalletConnection Component', () => {
   });
 
   it('should display wallet info when connected', () => {
-    const connectedValue = {
+    const connectedValue: WalletContextType = {
       ...mockWalletContextValue,
       isConnected: true,
       account: '0x1234567890123456789012345678901234567890',
@@ -75,7 +87,7 @@ describe('WalletConnection Component', () => {
   });
 
   it('should show wrong network warning when not on Sepolia', () => {
-    const wrongNetworkValue = {
+    const wrongNetworkValue: WalletContextType = {
       ...mockWalletContextValue,
       isConnected: true,
       account: '0x1234567890123456789012345678901234567890',

@@ -25,23 +25,23 @@ describe("IDO Contract", function () {
     const ido = await IDOContract.deploy(
       await truthToken.getAddress(),
       await pUSDToken.getAddress(),
-      ethers.parseUnits("0.15", 18), // Price: 0.15 pUSD per TRUTH
+      ethers.parseUnits("1", 0), // Price: 1 pUSD per TRUTH (0 decimals for pUSD)
       ethers.parseEther("150000000"), // 150M TRUTH for sale
-      ethers.parseEther("7500"), // Soft cap: 7500 pUSD
-      ethers.parseEther("22500"), // Hard cap: 22500 pUSD
-      ethers.parseEther("10"), // Min contribution: 10 pUSD
-      ethers.parseEther("2000"), // Max contribution: 2000 pUSD
-      7 * 24 * 60 * 60 // 7 days duration
+      ethers.parseUnits("7500", 0), // Soft cap: 7500 pUSD
+      ethers.parseUnits("22500", 0), // Hard cap: 22500 pUSD
+      ethers.parseUnits("10", 0), // Min contribution: 10 pUSD
+      ethers.parseUnits("2000", 0), // Max contribution: 2000 pUSD
+      30 * 24 * 60 * 60 // 30 days duration
     );
 
     // Transfer IDO allocation to IDO contract
     const idoAllocation = ethers.parseEther("150000000");
     await truthToken.transfer(await ido.getAddress(), idoAllocation);
 
-    // Mint pUSD to buyers for testing
-    await pUSDToken.mint(buyer1.address, ethers.parseEther("5000"));
-    await pUSDToken.mint(buyer2.address, ethers.parseEther("5000"));
-    await pUSDToken.mint(buyer3.address, ethers.parseEther("25000"));
+    // Mint pUSD to buyers for testing (0 decimals)
+    await pUSDToken.mint(buyer1.address, ethers.parseUnits("5000", 0));
+    await pUSDToken.mint(buyer2.address, ethers.parseUnits("5000", 0));
+    await pUSDToken.mint(buyer3.address, ethers.parseUnits("25000", 0));
 
     return { truthToken, pUSDToken, ido, owner, buyer1, buyer2, buyer3, treasury };
   }
@@ -52,10 +52,10 @@ describe("IDO Contract", function () {
 
       expect(await ido.truthToken()).to.equal(await truthToken.getAddress());
       expect(await ido.pUSDToken()).to.equal(await pUSDToken.getAddress());
-      expect(await ido.tokenPrice()).to.equal(ethers.parseUnits("0.15", 18));
+      expect(await ido.tokenPrice()).to.equal(ethers.parseUnits("1", 0));
       expect(await ido.tokensForSale()).to.equal(ethers.parseEther("150000000"));
-      expect(await ido.softCap()).to.equal(ethers.parseEther("7500"));
-      expect(await ido.hardCap()).to.equal(ethers.parseEther("22500"));
+      expect(await ido.softCap()).to.equal(ethers.parseUnits("7500", 0));
+      expect(await ido.hardCap()).to.equal(ethers.parseUnits("22500", 0));
     });
 
     it("Should initialize in preparation phase", async function () {
@@ -108,8 +108,8 @@ describe("IDO Contract", function () {
       const { ido, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
       await ido.startSale();
 
-      const pUSDAmount = ethers.parseEther("1000");
-      const expectedTokens = ethers.parseEther("6666.666666666666666666"); // 1000 / 0.15
+      const pUSDAmount = ethers.parseUnits("1000", 0); // 1000 pUSD with 0 decimals
+      const expectedTokens = ethers.parseEther("1000"); // 1000 pUSD / 1 = 1000 TRUTH tokens
 
       // Approve pUSD spending
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
@@ -125,7 +125,7 @@ describe("IDO Contract", function () {
       const { ido, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
       await ido.startSale();
 
-      const pUSDAmount = ethers.parseEther("5"); // Below 10 pUSD minimum
+      const pUSDAmount = ethers.parseUnits("5", 0); // Below 10 pUSD minimum
 
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
 
@@ -137,7 +137,7 @@ describe("IDO Contract", function () {
       const { ido, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
       await ido.startSale();
 
-      const pUSDAmount = ethers.parseEther("3000"); // Above 2000 pUSD maximum
+      const pUSDAmount = ethers.parseUnits("3000", 0); // Above 2000 pUSD maximum
 
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
 
@@ -149,8 +149,8 @@ describe("IDO Contract", function () {
       const { ido, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
       await ido.startSale();
 
-      const firstAmount = ethers.parseEther("500");
-      const secondAmount = ethers.parseEther("300");
+      const firstAmount = ethers.parseUnits("500", 0);
+      const secondAmount = ethers.parseUnits("300", 0);
 
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), firstAmount);
       await ido.connect(buyer1).buyTokens(firstAmount);
@@ -159,7 +159,7 @@ describe("IDO Contract", function () {
       await ido.connect(buyer1).buyTokens(secondAmount);
 
       expect(await ido.contributions(buyer1.address)).to.equal(
-        ethers.parseEther("800")
+        ethers.parseUnits("800", 0)
       );
     });
 
@@ -168,9 +168,9 @@ describe("IDO Contract", function () {
       await ido.startSale();
 
       // Fill up to hard cap (22500 pUSD)
-      const amount1 = ethers.parseEther("2000");
-      const amount2 = ethers.parseEther("2000");
-      const amount3 = ethers.parseEther("18500");
+      const amount1 = ethers.parseUnits("2000", 0);
+      const amount2 = ethers.parseUnits("2000", 0);
+      const amount3 = ethers.parseUnits("18500", 0);
 
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), amount1);
       await ido.connect(buyer1).buyTokens(amount1);
@@ -182,7 +182,7 @@ describe("IDO Contract", function () {
       await ido.connect(buyer3).buyTokens(amount3);
 
       // Should reject additional purchases
-      const extraAmount = ethers.parseEther("100");
+      const extraAmount = ethers.parseUnits("100", 0);
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), extraAmount);
       
       await expect(ido.connect(buyer1).buyTokens(extraAmount))
@@ -192,7 +192,7 @@ describe("IDO Contract", function () {
     it("Should reject purchases when sale not active", async function () {
       const { ido, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
 
-      const pUSDAmount = ethers.parseEther("1000");
+      const pUSDAmount = ethers.parseUnits("1000", 0);
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
 
       await expect(ido.connect(buyer1).buyTokens(pUSDAmount))
@@ -205,7 +205,7 @@ describe("IDO Contract", function () {
       const { ido, truthToken, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
       await ido.startSale();
 
-      const pUSDAmount = ethers.parseEther("1000");
+      const pUSDAmount = ethers.parseUnits("1000", 0);
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
       await ido.connect(buyer1).buyTokens(pUSDAmount);
 
@@ -223,7 +223,7 @@ describe("IDO Contract", function () {
       const { ido, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
       await ido.startSale();
 
-      const pUSDAmount = ethers.parseEther("1000");
+      const pUSDAmount = ethers.parseUnits("1000", 0);
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
       await ido.connect(buyer1).buyTokens(pUSDAmount);
 
@@ -240,7 +240,7 @@ describe("IDO Contract", function () {
       const { ido, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
       await ido.startSale();
 
-      const pUSDAmount = ethers.parseEther("1000"); // Below 7500 pUSD soft cap
+      const pUSDAmount = ethers.parseUnits("1000", 0); // Below 7500 pUSD soft cap
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
       await ido.connect(buyer1).buyTokens(pUSDAmount);
 
@@ -269,7 +269,7 @@ describe("IDO Contract", function () {
       await ido.startSale();
       await ido.emergencyPause();
 
-      const pUSDAmount = ethers.parseEther("1000");
+      const pUSDAmount = ethers.parseUnits("1000", 0);
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
 
       await expect(ido.connect(buyer1).buyTokens(pUSDAmount))
@@ -282,8 +282,8 @@ describe("IDO Contract", function () {
       const { ido, pUSDToken, buyer1 } = await loadFixture(deployIDOFixture);
       await ido.startSale();
 
-      const pUSDAmount = ethers.parseEther("1000");
-      const expectedTokens = ethers.parseEther("6666.666666666666666666");
+      const pUSDAmount = ethers.parseUnits("1000", 0); // 1000 pUSD with 0 decimals
+      const expectedTokens = ethers.parseEther("1000"); // 1000 pUSD / 1 = 1000 TRUTH tokens
 
       await pUSDToken.connect(buyer1).approve(await ido.getAddress(), pUSDAmount);
 

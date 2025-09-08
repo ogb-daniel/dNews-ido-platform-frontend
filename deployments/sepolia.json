@@ -1,0 +1,57 @@
+{
+  "network": {
+    "name": "sepolia",
+    "chainId": "11155111"
+  },
+  "deployer": "0x4A3e51080844329b7D841e2bE9da7DF5A3dEa4fB",
+  "contracts": {
+    "PAUDollar": {
+      "address": "0xDd7639e3920426de6c59A1009C7ce2A9802d0920",
+      "constructorArgs": []
+    },
+    "TruthToken": {
+      "address": "0x098DE3eA888058631AC1d2417B020F59b981442c",
+      "constructorArgs": [
+        "TRUTH Token",
+        "TRUTH",
+        "1000000000000000000000000000",
+        "0x4A3e51080844329b7D841e2bE9da7DF5A3dEa4fB",
+        "0x4A3e51080844329b7D841e2bE9da7DF5A3dEa4fB"
+      ]
+    },
+    "IDOContract": {
+      "address": "0x8474EEf1e520B112B4c79583A5Cb2f66E554725E",
+      "constructorArgs": [
+        "0x098DE3eA888058631AC1d2417B020F59b981442c",
+        "0xDd7639e3920426de6c59A1009C7ce2A9802d0920",
+        "1",
+        "150000000000000000000000000",
+        "7500",
+        "22500",
+        "10",
+        "2000",
+        2592000
+      ]
+    },
+    "VestingContract": {
+      "address": "0xd1eED5771a2d3217dc5B9B7Ba9d27e71dF621272",
+      "constructorArgs": ["0x098DE3eA888058631AC1d2417B020F59b981442c"]
+    }
+  },
+  "configuration": {
+    "tokenPrice": "0.000000000000000001",
+    "tokensForSale": "150000000.0",
+    "softCap": "0.0000000000000075",
+    "hardCap": "0.0000000000000225",
+    "minContribution": "0.00000000000000001",
+    "maxContribution": "0.000000000000002",
+    "saleDuration": 2592000
+  },
+  "deploymentTime": "2025-09-08T05:52:14.088Z",
+  "gasUsed": {
+    "pUSD": "N/A",
+    "truthToken": "1692097",
+    "idoContract": "1731365",
+    "vestingContract": "1028188"
+  }
+}

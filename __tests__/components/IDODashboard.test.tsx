@@ -1,21 +1,51 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { IDODashboard } from '@/components/IDODashboard';
-import { IDOContext } from '@/contexts/IDOContext';
-import { WalletContext } from '@/contexts/WalletContext';
-import { ReactNode } from 'react';
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { IDODashboard } from "@/components/IDODashboard";
+import { IDOContext, type IDOContextType } from "@/contexts/IDOContext";
+import {
+  WalletContext,
+  type WalletContextType,
+} from "@/contexts/WalletContext";
+import { ReactNode } from "react";
 
-const mockIDOContextValue = {
+// Mock the contracts module
+jest.mock("@/lib/contracts", () => ({
+  getIDOContract: jest.fn(),
+  getPAUDollarContract: jest.fn(),
+  getTruthTokenContract: jest.fn(),
+  ContractHelpers: {
+    formatTokenAmount: jest.fn((amount) => amount.toString()),
+    parseTokenAmount: jest.fn((amount) =>
+      BigInt(amount + "000000000000000000")
+    ),
+    getGasEstimate: jest.fn(() => Promise.resolve(BigInt("150000"))),
+    waitForTransaction: jest.fn(() =>
+      Promise.resolve({ status: 1, hash: "0xabcd" })
+    ),
+  },
+  ContractError: class ContractError extends Error {
+    code?: string;
+    constructor(message: string, code?: string) {
+      super(message);
+      this.code = code;
+    }
+    static fromError(error: any) {
+      return new ContractError(error.message || "Contract error", error.code);
+    }
+  },
+}));
+
+const mockIDOContextValue: IDOContextType = {
   idoData: {
     saleActive: true,
-    tokenPrice: '0.15',
-    tokensRemaining: '75000000',
-    totalRaised: '11250',
-    hardCap: '22500',
-    softCap: '7500',
+    tokenPrice: "1",
+    tokensRemaining: "75000000",
+    totalRaised: "11250",
+    hardCap: "22500",
+    softCap: "7500",
     saleEndTime: Date.now() + 86400000 * 3, // 3 days from now
-    userContribution: '0',
-    userTokens: '0',
-    phase: 'ACTIVE' as const,
+    userContribution: "0",
+    userTokens: "0",
+    phase: "ACTIVE",
   },
   loading: false,
   error: null,
@@ -24,14 +54,14 @@ const mockIDOContextValue = {
   claimRefund: jest.fn(),
   refreshData: jest.fn(),
   approvepUSD: jest.fn(),
-  getpUSDBalance: jest.fn().mockResolvedValue('1000'),
-  getpUSDAllowance: jest.fn().mockResolvedValue('0'),
+  getpUSDBalance: jest.fn().mockResolvedValue("1000"),
+  getpUSDAllowance: jest.fn().mockResolvedValue("0"),
 };
 
-const mockWalletContextValue = {
+const mockWalletContextValue: WalletContextType = {
   isConnected: true,
-  account: '0x1234567890123456789012345678901234567890',
-  balance: '1.5',
+  account: "0x1234567890123456789012345678901234567890",
+  balance: "1.5",
   chainId: 11155111,
   connectWallet: jest.fn(),
   disconnectWallet: jest.fn(),
@@ -39,28 +69,26 @@ const mockWalletContextValue = {
   provider: {} as any,
 };
 
-const MockProviders = ({ 
-  children, 
-  idoValue = mockIDOContextValue, 
-  walletValue = mockWalletContextValue 
-}: { 
-  children: ReactNode; 
-  idoValue?: typeof mockIDOContextValue;
-  walletValue?: typeof mockWalletContextValue;
+const MockProviders = ({
+  children,
+  idoValue = mockIDOContextValue,
+  walletValue = mockWalletContextValue,
+}: {
+  children: ReactNode;
+  idoValue?: IDOContextType;
+  walletValue?: WalletContextType;
 }) => (
   <WalletContext.Provider value={walletValue}>
-    <IDOContext.Provider value={idoValue}>
-      {children}
-    </IDOContext.Provider>
+    <IDOContext.Provider value={idoValue}>{children}</IDOContext.Provider>
   </WalletContext.Provider>
 );
 
-describe('IDODashboard Component', () => {
+describe("IDODashboard Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should render IDO statistics correctly', () => {
+  it("should render IDO statistics correctly", () => {
     render(
       <MockProviders>
         <IDODashboard />
@@ -68,56 +96,60 @@ describe('IDODashboard Component', () => {
     );
 
     // Check if main stats are displayed
-    expect(screen.getByText('11,250 pUSD')).toBeInTheDocument();
-    expect(screen.getByText('75,000,000')).toBeInTheDocument();
-    expect(screen.getByText('0.15 pUSD')).toBeInTheDocument();
+    expect(screen.getByText("11,250 pUSD")).toBeInTheDocument();
+    expect(screen.getByText("75,000,000")).toBeInTheDocument();
+    expect(screen.getByText("1.00 pUSD")).toBeInTheDocument();
   });
 
-  it('should show purchase interface when IDO is active', () => {
+  it("should show purchase interface when IDO is active", () => {
     render(
       <MockProviders>
         <IDODashboard />
       </MockProviders>
     );
 
-    expect(screen.getByText('Purchase TRUTH Tokens')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter pUSD amount')).toBeInTheDocument();
+    expect(screen.getByText("Purchase TRUTH Tokens")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Enter pUSD amount")
+    ).toBeInTheDocument();
   });
 
-  it('should calculate token amount correctly when pUSD input changes', async () => {
+  it("should calculate token amount correctly when pUSD input changes", async () => {
     render(
       <MockProviders>
         <IDODashboard />
       </MockProviders>
     );
 
-    const pUSDInput = screen.getByPlaceholderText('Enter pUSD amount');
-    fireEvent.change(pUSDInput, { target: { value: '150' } });
+    const pUSDInput = screen.getByPlaceholderText("Enter pUSD amount");
+    fireEvent.change(pUSDInput, { target: { value: "150" } });
 
-    // 150 pUSD / 0.15 = 1000 TRUTH tokens
+    // 150 pUSD / 1 = 150 TRUTH tokens
     await waitFor(() => {
-      const truthInput = screen.getByDisplayValue('1000.00');
+      const truthInput = screen.getByDisplayValue("150.00");
       expect(truthInput).toBeInTheDocument();
     });
   });
 
-  it('should show validation error for amount below minimum', async () => {
+  it("should show validation error for amount below minimum", async () => {
     render(
       <MockProviders>
         <IDODashboard />
       </MockProviders>
     );
 
-    const pUSDInput = screen.getByPlaceholderText('Enter pUSD amount');
-    fireEvent.change(pUSDInput, { target: { value: '5' } });
+    const pUSDInput = screen.getByPlaceholderText("Enter pUSD amount");
+    fireEvent.change(pUSDInput, { target: { value: "5" } });
 
     await waitFor(() => {
-      expect(screen.getByText('Minimum contribution: 10 pUSD')).toBeInTheDocument();
+      expect(
+        screen.getByText("Minimum contribution: 10 pUSD")
+      ).toBeInTheDocument();
     });
   });
 
-  it('should show approval button when allowance is insufficient', async () => {
-    const mockGetAllowance = jest.fn().mockResolvedValue('0');
+  it("should show approval button when allowance is insufficient", async () => {
+    const mockGetAllowance = jest.fn().mockResolvedValue("0");
     const idoValueWithLowAllowance = {
       ...mockIDOContextValue,
       getpUSDAllowance: mockGetAllowance,
@@ -129,20 +161,20 @@ describe('IDODashboard Component', () => {
       </MockProviders>
     );
 
-    const pUSDInput = screen.getByPlaceholderText('Enter pUSD amount');
-    fireEvent.change(pUSDInput, { target: { value: '100' } });
+    const pUSDInput = screen.getByPlaceholderText("Enter pUSD amount");
+    fireEvent.change(pUSDInput, { target: { value: "100" } });
 
     await waitFor(() => {
-      expect(screen.getByText('Approve pUSD')).toBeInTheDocument();
+      expect(screen.getByText("Approve pUSD")).toBeInTheDocument();
     });
   });
 
-  it('should call approvepUSD when approve button is clicked', async () => {
+  it("should call approvepUSD when approve button is clicked", async () => {
     const mockApprovepUSD = jest.fn().mockResolvedValue({});
     const idoValueWithApprove = {
       ...mockIDOContextValue,
       approvepUSD: mockApprovepUSD,
-      getpUSDAllowance: jest.fn().mockResolvedValue('0'),
+      getpUSDAllowance: jest.fn().mockResolvedValue("0"),
     };
 
     render(
@@ -151,22 +183,22 @@ describe('IDODashboard Component', () => {
       </MockProviders>
     );
 
-    const pUSDInput = screen.getByPlaceholderText('Enter pUSD amount');
-    fireEvent.change(pUSDInput, { target: { value: '100' } });
+    const pUSDInput = screen.getByPlaceholderText("Enter pUSD amount");
+    fireEvent.change(pUSDInput, { target: { value: "100" } });
 
     await waitFor(() => {
-      const approveButton = screen.getByText('Approve pUSD');
+      const approveButton = screen.getByText("Approve pUSD");
       fireEvent.click(approveButton);
-      expect(mockApprovepUSD).toHaveBeenCalledWith('100');
+      expect(mockApprovepUSD).toHaveBeenCalledWith("100");
     });
   });
 
-  it('should call purchaseTokens when purchase button is clicked', async () => {
+  it("should call purchaseTokens when purchase button is clicked", async () => {
     const mockPurchaseTokens = jest.fn().mockResolvedValue({});
     const idoValueWithPurchase = {
       ...mockIDOContextValue,
       purchaseTokens: mockPurchaseTokens,
-      getpUSDAllowance: jest.fn().mockResolvedValue('1000'), // Sufficient allowance
+      getpUSDAllowance: jest.fn().mockResolvedValue("1000"), // Sufficient allowance
     };
 
     render(
@@ -175,23 +207,23 @@ describe('IDODashboard Component', () => {
       </MockProviders>
     );
 
-    const pUSDInput = screen.getByPlaceholderText('Enter pUSD amount');
-    fireEvent.change(pUSDInput, { target: { value: '100' } });
+    const pUSDInput = screen.getByPlaceholderText("Enter pUSD amount");
+    fireEvent.change(pUSDInput, { target: { value: "100" } });
 
     await waitFor(() => {
-      const purchaseButton = screen.getByText('Purchase Tokens');
+      const purchaseButton = screen.getByText("Purchase Tokens");
       fireEvent.click(purchaseButton);
-      expect(mockPurchaseTokens).toHaveBeenCalledWith('100');
+      expect(mockPurchaseTokens).toHaveBeenCalledWith("100");
     });
   });
 
-  it('should show portfolio information when wallet is connected', () => {
+  it("should show portfolio information when wallet is connected", () => {
     const idoValueWithContribution = {
       ...mockIDOContextValue,
       idoData: {
         ...mockIDOContextValue.idoData,
-        userContribution: '500',
-        userTokens: '3333.33',
+        userContribution: "500",
+        userTokens: "3333.33",
       },
     };
 
@@ -202,14 +234,14 @@ describe('IDODashboard Component', () => {
     );
 
     // Switch to portfolio tab
-    fireEvent.click(screen.getByText('Your Portfolio'));
+    fireEvent.click(screen.getByText("Your Portfolio"));
 
-    expect(screen.getByText('500 pUSD')).toBeInTheDocument();
-    expect(screen.getByText('3333.33 TRUTH')).toBeInTheDocument();
+    expect(screen.getByText("500 pUSD")).toBeInTheDocument();
+    expect(screen.getByText("3333.33 TRUTH")).toBeInTheDocument();
   });
 
-  it('should show connect wallet message in portfolio when not connected', () => {
-    const walletNotConnected = {
+  it("should show connect wallet message in portfolio when not connected", () => {
+    const walletNotConnected: WalletContextType = {
       ...mockWalletContextValue,
       isConnected: false,
       account: null,
@@ -222,18 +254,20 @@ describe('IDODashboard Component', () => {
     );
 
     // Switch to portfolio tab
-    fireEvent.click(screen.getByText('Your Portfolio'));
+    fireEvent.click(screen.getByText("Your Portfolio"));
 
-    expect(screen.getByText('Connect your wallet to view your portfolio')).toBeInTheDocument();
+    expect(
+      screen.getByText("Connect your wallet to view your portfolio")
+    ).toBeInTheDocument();
   });
 
-  it('should show claim button when IDO is in CLAIM phase', () => {
+  it("should show claim button when IDO is in CLAIM phase", () => {
     const idoValueClaimPhase = {
       ...mockIDOContextValue,
       idoData: {
         ...mockIDOContextValue.idoData,
-        phase: 'CLAIM' as const,
-        userTokens: '1000',
+        phase: "CLAIM" as const,
+        userTokens: "1000",
       },
     };
 
@@ -243,17 +277,17 @@ describe('IDODashboard Component', () => {
       </MockProviders>
     );
 
-    expect(screen.getByText('Claim TRUTH Tokens')).toBeInTheDocument();
+    expect(screen.getByText("Claim TRUTH Tokens")).toBeInTheDocument();
   });
 
-  it('should show refund button when IDO ended without reaching soft cap', () => {
+  it("should show refund button when IDO ended without reaching soft cap", () => {
     const idoValueEndedFailed = {
       ...mockIDOContextValue,
       idoData: {
         ...mockIDOContextValue.idoData,
-        phase: 'ENDED' as const,
-        totalRaised: '5000', // Below soft cap of 7500
-        userContribution: '100',
+        phase: "ENDED" as const,
+        totalRaised: "5000", // Below soft cap of 7500
+        userContribution: "100",
       },
     };
 
@@ -263,6 +297,6 @@ describe('IDODashboard Component', () => {
       </MockProviders>
     );
 
-    expect(screen.getByText('Claim Refund')).toBeInTheDocument();
+    expect(screen.getByText("Claim Refund")).toBeInTheDocument();
   });
 });

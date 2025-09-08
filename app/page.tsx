@@ -1,16 +1,30 @@
-"use client"
+"use client";
 
-import { WalletConnection } from "@/components/WalletConnection"
-import { IDODashboard } from "@/components/IDODashboard"
-import { CountdownTimer } from "@/components/CountdownTimer"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { useIDO } from "@/contexts/IDOContext"
-import { Newspaper, Shield, Users, Zap, ExternalLink, Github, Twitter } from "lucide-react"
+import { WalletConnection } from "@/components/WalletConnection";
+import { IDODashboard } from "@/components/IDODashboard";
+import { CountdownTimer } from "@/components/CountdownTimer";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useIDO } from "@/contexts/IDOContext";
+import {
+  Newspaper,
+  Shield,
+  Users,
+  Zap,
+  ExternalLink,
+  Github,
+  Twitter,
+} from "lucide-react";
 
 export default function HomePage() {
-  const { idoData } = useIDO()
+  const { idoData } = useIDO();
 
   return (
     <div className="min-h-screen">
@@ -64,8 +78,9 @@ export default function HomePage() {
               className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in"
               style={{ animationDelay: "0.2s" }}
             >
-              Join the future of decentralized journalism. Participate in the TRUTH Token Initial DEX Offering and
-              become part of the dNews ecosystem.
+              Join the future of decentralized journalism. Participate in the
+              TRUTH Token Initial DEX Offering and become part of the dNews
+              ecosystem.
             </p>
           </div>
 
@@ -74,7 +89,9 @@ export default function HomePage() {
               <div className="text-2xl font-bold text-primary">
                 {Number.parseFloat(idoData.totalRaised).toLocaleString()} pUSD
               </div>
-              <div className="text-sm text-muted-foreground">Raised (PAU Dollar)</div>
+              <div className="text-sm text-muted-foreground">
+                Raised (PAU Dollar)
+              </div>
             </div>
             <div className="hidden sm:block w-px h-8 bg-border"></div>
             <div className="text-center">
@@ -85,8 +102,12 @@ export default function HomePage() {
             </div>
             <div className="hidden sm:block w-px h-8 bg-border"></div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-accent">{idoData.tokenPrice} pUSD</div>
-              <div className="text-sm text-muted-foreground">Per Token (PAU Dollar)</div>
+              <div className="text-2xl font-bold text-accent">
+                {idoData.tokenPrice} pUSD
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Per Token (PAU Dollar)
+              </div>
             </div>
           </div>
         </section>
@@ -117,13 +138,16 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                dNews is building the future of journalism through blockchain technology, ensuring transparency and
-                truth in media.
+                dNews is building the future of journalism through blockchain
+                technology, ensuring transparency and truth in media.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="glass animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <Card
+            className="glass animate-fade-in"
+            style={{ animationDelay: "0.1s" }}
+          >
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Shield className="h-5 w-5 text-secondary" />
@@ -132,12 +156,16 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                TRUTH token holders participate in governance decisions, shaping the future of decentralized journalism.
+                TRUTH token holders participate in governance decisions, shaping
+                the future of decentralized journalism.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="glass animate-fade-in" style={{ animationDelay: "0.2s" }}>
+          <Card
+            className="glass animate-fade-in"
+            style={{ animationDelay: "0.2s" }}
+          >
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Users className="h-5 w-5 text-accent" />
@@ -146,7 +174,8 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                40% of tokens allocated to community rewards, ensuring fair distribution and long-term sustainability.
+                40% of tokens allocated to community rewards, ensuring fair
+                distribution and long-term sustainability.
               </CardDescription>
             </CardContent>
           </Card>
@@ -157,34 +186,54 @@ export default function HomePage() {
           <Card className="glass-strong animate-slide-up">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Tokenomics</CardTitle>
-              <CardDescription>Total Supply: 1,000,000,000 TRUTH Tokens</CardDescription>
+              <CardDescription>
+                Total Supply: 1,000,000,000 TRUTH Tokens
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="text-center p-4 rounded-lg bg-chart-1/10 border border-chart-1/20">
                   <div className="text-2xl font-bold text-chart-1">40%</div>
-                  <div className="text-sm text-muted-foreground">Community Rewards</div>
-                  <div className="text-xs text-muted-foreground">400M TRUTH</div>
+                  <div className="text-sm text-muted-foreground">
+                    Community Rewards
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    400M TRUTH
+                  </div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-chart-2/10 border border-chart-2/20">
                   <div className="text-2xl font-bold text-chart-2">20%</div>
-                  <div className="text-sm text-muted-foreground">Team & Founders</div>
-                  <div className="text-xs text-muted-foreground">200M TRUTH</div>
+                  <div className="text-sm text-muted-foreground">
+                    Team & Founders
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    200M TRUTH
+                  </div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-chart-3/10 border border-chart-3/20">
                   <div className="text-2xl font-bold text-chart-3">15%</div>
                   <div className="text-sm text-muted-foreground">IDO Sale</div>
-                  <div className="text-xs text-muted-foreground">150M TRUTH</div>
+                  <div className="text-xs text-muted-foreground">
+                    150M TRUTH
+                  </div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-chart-4/10 border border-chart-4/20">
                   <div className="text-2xl font-bold text-chart-4">15%</div>
-                  <div className="text-sm text-muted-foreground">DAO Treasury</div>
-                  <div className="text-xs text-muted-foreground">150M TRUTH</div>
+                  <div className="text-sm text-muted-foreground">
+                    DAO Treasury
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    150M TRUTH
+                  </div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-chart-5/10 border border-chart-5/20">
                   <div className="text-2xl font-bold text-chart-5">10%</div>
-                  <div className="text-sm text-muted-foreground">Private Investors</div>
-                  <div className="text-xs text-muted-foreground">100M TRUTH</div>
+                  <div className="text-sm text-muted-foreground">
+                    Private Investors
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    100M TRUTH
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -202,7 +251,9 @@ export default function HomePage() {
               </div>
               <div>
                 <div className="font-semibold">dNews TRUTH Token</div>
-                <div className="text-sm text-muted-foreground">Decentralized Media Platform</div>
+                <div className="text-sm text-muted-foreground">
+                  Decentralized Media Platform
+                </div>
               </div>
             </div>
 
@@ -219,10 +270,13 @@ export default function HomePage() {
           </div>
 
           <div className="mt-8 pt-4 border-t border-border/50 text-center text-sm text-muted-foreground">
-            <p>© 2024 dNews. Built for the decentralized future of journalism.</p>
+            <p>
+              © {new Date().getFullYear()} dNews. Built for the decentralized
+              future of journalism.
+            </p>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }

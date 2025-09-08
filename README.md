@@ -153,7 +153,7 @@ await idoContract.buyTokens(ethers.parseEther("100")) // Buy with 100 pUSD
 ### Token Economics
 - **Total Supply**: 1,000,000,000 TRUTH
 - **IDO Allocation**: 150,000,000 TRUTH (15%)
-- **Token Price**: 0.15 pUSD per TRUTH
+- **Token Price**: 1 pUSD per TRUTH
 - **Hard Cap**: 22,500 pUSD
 - **Soft Cap**: 7,500 pUSD
 
@@ -163,7 +163,7 @@ await idoContract.buyTokens(ethers.parseEther("100")) // Buy with 100 pUSD
 
 ### Sale Phases
 1. **Preparation**: Contract deployment and setup
-2. **Active**: Public token sale (7 days)
+2. **Active**: Public token sale (30 days)
 3. **Finalization**: Process results and setup claiming
 4. **Claim**: Token claiming for participants
 5. **Ended**: Sale concluded

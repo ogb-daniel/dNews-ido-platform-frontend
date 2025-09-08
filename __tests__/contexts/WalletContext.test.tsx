@@ -1,6 +1,16 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { WalletProvider, useWallet } from '@/contexts/WalletContext';
+import { WalletProvider, useWallet, type WalletContextType } from '@/contexts/WalletContext';
 import { ReactNode } from 'react';
+
+// Mock ethers
+jest.mock("ethers", () => ({
+  BrowserProvider: jest.fn(() => ({
+    send: jest.fn().mockResolvedValue(['0x1234567890123456789012345678901234567890']),
+    getNetwork: jest.fn().mockResolvedValue({ chainId: 11155111n }),
+    getBalance: jest.fn().mockResolvedValue(BigInt('1500000000000000000')),
+  })),
+  formatEther: jest.fn(() => '1.5'),
+}));
 
 // Mock ethers
 const mockProvider = {
@@ -48,7 +58,7 @@ describe('WalletContext', () => {
 
   it('should connect wallet successfully', async () => {
     mockProvider.send.mockResolvedValueOnce(['0x1234567890123456789012345678901234567890']);
-    mockProvider.getNetwork.mockResolvedValueOnce({ chainId: 11155111n });
+    mockProvider.getNetwork.mockResolvedValueOnce({ chainId: BigInt(11155111) });
     mockProvider.getBalance.mockResolvedValueOnce(BigInt('1500000000000000000')); // 1.5 ETH
 
     const { result } = renderHook(() => useWallet(), { wrapper });
@@ -157,7 +167,7 @@ describe('WalletContext', () => {
 
   it('should show wrong network warning for non-Sepolia chains', async () => {
     mockProvider.send.mockResolvedValueOnce(['0x1234567890123456789012345678901234567890']);
-    mockProvider.getNetwork.mockResolvedValueOnce({ chainId: 1n }); // Mainnet
+    mockProvider.getNetwork.mockResolvedValueOnce({ chainId: BigInt(1) }); // Mainnet
     mockProvider.getBalance.mockResolvedValueOnce(BigInt('1500000000000000000'));
 
     const { result } = renderHook(() => useWallet(), { wrapper });
