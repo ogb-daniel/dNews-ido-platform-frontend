@@ -146,6 +146,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   // Listen for account and network changes
+  // Create read-only provider when ethereum is available but wallet not connected
+  useEffect(() => {
+    if (window.ethereum && !provider && !isConnected) {
+      const readOnlyProvider = new BrowserProvider(window.ethereum);
+      setProvider(readOnlyProvider);
+    }
+  }, [provider, isConnected]);
+
   useEffect(() => {
     if (window.ethereum) {
       const handleAccountsChanged = (accounts: string[]) => {

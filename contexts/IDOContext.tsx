@@ -105,13 +105,13 @@ export function IDOProvider({ children }: { children: ReactNode }) {
       setIdoData({
         saleActive: Number(phase) === 1, // ACTIVE phase
         tokenPrice: ContractHelpers.formatTokenAmount(tokenPrice, 0), // pUSD has 0 decimals
-        tokensRemaining: ContractHelpers.formatTokenAmount(remainingTokens),
-        totalRaised: ContractHelpers.formatTokenAmount(raised),
-        hardCap: ContractHelpers.formatTokenAmount(hardCap),
-        softCap: ContractHelpers.formatTokenAmount(softCap),
+        tokensRemaining: ContractHelpers.formatTokenAmount(remainingTokens), // TRUTH tokens (18 decimals)
+        totalRaised: ContractHelpers.formatTokenAmount(raised, 0), // pUSD has 0 decimals
+        hardCap: ContractHelpers.formatTokenAmount(hardCap, 0), // pUSD has 0 decimals
+        softCap: ContractHelpers.formatTokenAmount(softCap, 0), // pUSD has 0 decimals
         saleEndTime: Number(endTime) * 1000, // Convert to milliseconds
-        userContribution: ContractHelpers.formatTokenAmount(userContribution),
-        userTokens: ContractHelpers.formatTokenAmount(userTokens),
+        userContribution: ContractHelpers.formatTokenAmount(userContribution, 0), // pUSD has 0 decimals
+        userTokens: ContractHelpers.formatTokenAmount(userTokens), // TRUTH tokens (18 decimals)
         phase: phaseString,
       });
 
@@ -427,12 +427,12 @@ export function IDOProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (isConnected && provider && account) {
+    if (provider) {
       refreshData();
       const interval = setInterval(refreshData, 30000); // Refresh every 30 seconds
       return () => clearInterval(interval);
     }
-  }, [isConnected, provider, account]);
+  }, [provider, account]); // Refresh when provider or account changes
 
   const value = {
     idoData,
