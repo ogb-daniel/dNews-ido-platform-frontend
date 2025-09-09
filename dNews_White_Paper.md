@@ -272,7 +272,7 @@ To ensure long-term value appreciation, dNews implements several deflationary me
 
 ## 8. Roadmap and Implementation Timeline
 
-### 8.1 Phase 1: Foundation (Q4 2024 - Q1 2025) ✅ COMPLETED
+### 8.1 Phase 1: Foundation (Q4 2025 - Q1 2026) ✅ COMPLETED
 
 - **Smart Contract Development**: Complete implementation of TRUTH token, IDO, and vesting contracts
 - **Frontend Application**: Functional Web3 interface for token purchase and management
@@ -281,28 +281,28 @@ To ensure long-term value appreciation, dNews implements several deflationary me
 
 **Status**: Successfully completed with live deployment on Sepolia testnet
 
-### 8.2 Phase 2: IDO Launch and Community Building (Q1 2025 - Q2 2025)
+### 8.2 Phase 2: IDO Launch and Community Building (Q1 2026 - Q2 2026)
 
 - **Public Token Sale**: Launch 30-day IDO for community participation
 - **Community Onboarding**: Educational content and user acquisition
 - **Partnership Development**: Establish relationships with news organizations
 - **Platform Beta**: Limited beta release for content creators and validators
 
-### 8.3 Phase 3: Platform Launch (Q2 2025 - Q3 2025)
+### 8.3 Phase 3: Platform Launch (Q2 2026 - Q3 2026)
 
 - **Content Creation Platform**: Launch decentralized publishing platform
 - **Validation System**: Implement community-driven fact-checking
 - **Governance Implementation**: Deploy DAO governance for platform decisions
 - **Mobile Application**: Release mobile app for broader accessibility
 
-### 8.4 Phase 4: Ecosystem Expansion (Q3 2025 - Q4 2025)
+### 8.4 Phase 4: Ecosystem Expansion (Q3 2026 - Q4 2026)
 
 - **Institutional API**: Launch premium services for professional organizations
 - **Cross-chain Integration**: Expand to additional blockchain networks
 - **Advanced Analytics**: Implement comprehensive platform analytics
 - **Global Partnerships**: Establish international news organization partnerships
 
-### 8.5 Phase 5: Decentralized Governance (Q4 2025 - Q1 2026)
+### 8.5 Phase 5: Decentralized Governance (Q4 2026 - Q1 2027)
 
 - **Full DAO Implementation**: Complete transition to community governance
 - **Layer 2 Integration**: Implement scaling solutions for reduced fees
@@ -461,8 +461,7 @@ Through careful implementation, community building, and continuous innovation, d
 ---
 
 **Document Version**: 1.0  
-**Publication Date**: December 2024  
-**Authors**: dNews Foundation  
-**Contact**: info@dnews.foundation  
-**Website**: https://dnews.foundation
-(Content truncated due to size limit. Use page ranges or line ranges to read remaining content)
+**Publication Date**: September 2025
+**Authors**: Chetachukwu Ogbuike  
+**Contact**: ogbuike.chetachukwu@pau.edu.ng  
+**Website**: https://dnews-ido-platform-frontend.vercel.app/

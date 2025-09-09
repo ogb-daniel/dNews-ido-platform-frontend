@@ -636,7 +636,5 @@ This technical foundation positions dNews to revolutionize the news industry by 
 ---
 
 **Document Version**: 1.0  
-**Last Updated**: December 2024  
-**Authors**: dNews Technical Team  
-**Review Status**: Technical Review Complete
-(Content truncated due to size limit. Use page ranges or line ranges to read remaining content)
+**Last Updated**: September 2025
+**Authors**: Chetachukwu Ogbuike
