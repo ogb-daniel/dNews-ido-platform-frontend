@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIDO } from "@/contexts/IDOContext";
 import { useWallet } from "@/contexts/WalletContext";
+import { CurrencyHelpers, PaymentToken, PAYMENT_TOKENS } from "@/lib/contracts";
 import {
   Coins,
   Clock,
@@ -43,12 +44,11 @@ export function IDODashboard() {
   const [pUSDBalance, setPUSDBalance] = useState("0");
   const [pUSDAllowance, setPUSDAllowance] = useState("0");
   const [needsApproval, setNeedsApproval] = useState(false);
+  const [currentPaymentToken] = useState<PaymentToken>(PAYMENT_TOKENS.pUSD); // Currently only pUSD supported
 
-  const calculateTokenAmount = (pUSD: string) => {
-    if (!pUSD || isNaN(Number.parseFloat(pUSD))) return "0";
-    return (
-      Number.parseFloat(pUSD) / Number.parseFloat(idoData.tokenPrice)
-    ).toFixed(2);
+  const calculateTokenAmount = (paymentAmount: string) => {
+    if (!paymentAmount || isNaN(Number.parseFloat(paymentAmount))) return "0";
+    return CurrencyHelpers.toTruth(paymentAmount, currentPaymentToken.symbol);
   };
 
   // Fetch pUSD balance and allowance
@@ -58,7 +58,7 @@ export function IDODashboard() {
         try {
           const [balance, allowance] = await Promise.all([
             getpUSDBalance(),
-            getpUSDAllowance()
+            getpUSDAllowance(),
           ]);
           setPUSDBalance(balance);
           setPUSDAllowance(allowance);
@@ -101,12 +101,12 @@ export function IDODashboard() {
     if (!pUSDAmount || !isConnected) return;
 
     const amount = Number.parseFloat(pUSDAmount);
-    
+
     // Check balance
     if (amount > parseFloat(pUSDBalance)) {
       toast({
         title: "Insufficient Balance",
-        description: "You don't have enough pUSD tokens",
+        description: "You don't have enough tokens",
         variant: "destructive",
       });
       return;
@@ -119,7 +119,7 @@ export function IDODashboard() {
     if (amount < 10) {
       toast({
         title: "Invalid Amount",
-        description: "Minimum contribution: 10 pUSD",
+        description: "Minimum contribution: ₦15,000 (10 pUSD)",
         variant: "destructive",
       });
       return;
@@ -128,9 +128,10 @@ export function IDODashboard() {
     if (newTotal > 2000) {
       toast({
         title: "Invalid Amount",
-        description: `Maximum total contribution: 2000 pUSD. You can contribute ${(
-          2000 - currentContribution
-        ).toFixed(2)} more pUSD.`,
+        description: `Maximum total contribution: ₦3,000,000 (2000 pUSD). You can contribute ₦${(
+          (2000 - currentContribution) *
+          1500
+        ).toLocaleString()} more.`,
         variant: "destructive",
       });
       return;
@@ -144,7 +145,7 @@ export function IDODashboard() {
         // Refresh balances
         const [newBalance, newAllowance] = await Promise.all([
           getpUSDBalance(),
-          getpUSDAllowance()
+          getpUSDAllowance(),
         ]);
         setPUSDBalance(newBalance);
         setPUSDAllowance(newAllowance);
@@ -189,7 +190,7 @@ export function IDODashboard() {
   return (
     <div className="space-y-6" data-testid="ido-dashboard" role="main">
       {/* IDO Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="glass animate-fade-in">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Raised</CardTitle>
@@ -197,11 +198,22 @@ export function IDODashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              {Number.parseFloat(idoData.totalRaised).toLocaleString()} pUSD
+              {CurrencyHelpers.toNaira(
+                idoData.totalRaised,
+                currentPaymentToken.symbol
+              )}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {Number.parseFloat(idoData.totalRaised).toLocaleString()}{" "}
+              {currentPaymentToken.symbol}
             </div>
             <p className="text-xs text-muted-foreground">
-              of {Number.parseFloat(idoData.hardCap).toLocaleString()} PAU
-              Dollar (pUSD) hard cap
+              of{" "}
+              {CurrencyHelpers.toNaira(
+                idoData.hardCap,
+                currentPaymentToken.symbol
+              )}{" "}
+              goal
             </p>
           </CardContent>
         </Card>
@@ -229,24 +241,6 @@ export function IDODashboard() {
         <Card
           className="glass animate-fade-in"
           style={{ animationDelay: "0.2s" }}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Token Price</CardTitle>
-            <Target className="h-4 w-4 text-accent" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-accent">
-              {idoData.tokenPrice} pUSD
-            </div>
-            <p className="text-xs text-muted-foreground">
-              per TRUTH token (PAU Dollar)
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="glass animate-fade-in"
-          style={{ animationDelay: "0.3s" }}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -279,14 +273,8 @@ export function IDODashboard() {
         <CardContent>
           <Progress value={progressPercentage} className="h-3" />
           <div className="flex justify-between text-sm text-muted-foreground mt-2">
-            <span>
-              Soft Cap: {Number.parseFloat(idoData.softCap).toLocaleString()}{" "}
-              PAU Dollar (pUSD)
-            </span>
-            <span>
-              Hard Cap: {Number.parseFloat(idoData.hardCap).toLocaleString()}{" "}
-              PAU Dollar (pUSD)
-            </span>
+            <span>Soft Cap: {CurrencyHelpers.toNaira(idoData.softCap)}</span>
+            <span>Hard Cap: {CurrencyHelpers.toNaira(idoData.hardCap)}</span>
           </div>
         </CardContent>
       </Card>
@@ -305,36 +293,41 @@ export function IDODashboard() {
                 <Coins className="h-5 w-5 text-primary" />
                 <span>Purchase TRUTH Tokens</span>
               </CardTitle>
-              <CardDescription>
-                Minimum: 10 PAU Dollar (pUSD) • Maximum: 2000 PAU Dollar (pUSD)
-                per address
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {isConnected && (
                 <div className="p-3 rounded-lg bg-muted/50 border">
                   <div className="flex justify-between items-center text-sm">
-                    <span>Your pUSD Balance:</span>
-                    <span className="font-medium">{parseFloat(pUSDBalance).toLocaleString()} pUSD</span>
+                    <span>Your {currentPaymentToken.symbol} Balance:</span>
+                    <span className="font-medium">
+                      {parseFloat(pUSDBalance).toLocaleString()}{" "}
+                      {currentPaymentToken.symbol}
+                    </span>
                   </div>
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="pusd-amount">pUSD Amount</Label>
+                  <Label htmlFor="payment-amount">
+                    {currentPaymentToken.name} Amount
+                  </Label>
                   <Input
-                    id="pusd-amount"
+                    id="payment-amount"
                     type="number"
-                    placeholder="Enter pUSD amount"
+                    placeholder={`Enter ${currentPaymentToken.symbol} amount`}
                     value={pUSDAmount}
                     onChange={(e) => setPUSDAmount(e.target.value)}
                     min="10"
                     max="2000"
                     step="1"
                     disabled={idoData.phase !== "ACTIVE"}
-                    aria-label="pUSD amount to purchase"
+                    aria-label={`${currentPaymentToken.symbol} amount to purchase`}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    1 {currentPaymentToken.symbol} = ₦
+                    {currentPaymentToken.nairaRate.toLocaleString()}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="truth-amount">TRUTH Tokens</Label>
@@ -346,14 +339,29 @@ export function IDODashboard() {
                     readOnly
                     className="bg-muted"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    1 {currentPaymentToken.symbol} ={" "}
+                    {currentPaymentToken.truthRate} TRUTH
+                  </p>
                 </div>
               </div>
 
               {pUSDAmount && (
                 <div className="p-4 rounded-lg bg-muted/50 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>PAU Dollar Amount:</span>
-                    <span className="font-medium">{pUSDAmount} pUSD</span>
+                    <span>Amount (Naira):</span>
+                    <span className="font-medium">
+                      {CurrencyHelpers.toNaira(
+                        pUSDAmount,
+                        currentPaymentToken.symbol
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{currentPaymentToken.name} Amount:</span>
+                    <span>
+                      {pUSDAmount} {currentPaymentToken.symbol}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>TRUTH Tokens:</span>
@@ -362,9 +370,17 @@ export function IDODashboard() {
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Price per Token:</span>
+                    <span>Exchange Rate:</span>
                     <span className="font-medium">
-                      {idoData.tokenPrice} PAU Dollar (pUSD)
+                      1 {currentPaymentToken.symbol} = ₦
+                      {currentPaymentToken.nairaRate.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>TRUTH Rate:</span>
+                    <span>
+                      1 {currentPaymentToken.symbol} ={" "}
+                      {currentPaymentToken.truthRate} TRUTH
                     </span>
                   </div>
                 </div>
@@ -383,7 +399,9 @@ export function IDODashboard() {
                       size="lg"
                       variant="outline"
                     >
-                      {isSubmitting ? "Approving..." : "Approve pUSD"}
+                      {isSubmitting
+                        ? "Approving..."
+                        : `Approve ${currentPaymentToken.symbol}`}
                     </Button>
                   ) : (
                     <Button
@@ -457,21 +475,25 @@ export function IDODashboard() {
                   {parseFloat(pUSDAmount) > 0 &&
                     parseFloat(pUSDAmount) < 10 && (
                       <p className="text-sm text-destructive">
-                        Minimum contribution: 10 pUSD
+                        Minimum contribution: ₦15,000 (10 pUSD)
                       </p>
                     )}
                   {parseFloat(pUSDAmount) > parseFloat(pUSDBalance) && (
                     <p className="text-sm text-destructive">
-                      Insufficient pUSD balance
+                      Insufficient {currentPaymentToken.symbol} balance
                     </p>
                   )}
                   {parseFloat(pUSDAmount) +
                     parseFloat(idoData.userContribution) >
                     2000 && (
                     <p className="text-sm text-destructive">
-                      Maximum total contribution: 2000 pUSD. You can contribute{" "}
-                      {(2000 - parseFloat(idoData.userContribution)).toFixed(2)}{" "}
-                      more pUSD.
+                      Maximum total contribution: ₦3,000,000 (2000 pUSD). You
+                      can contribute ₦
+                      {(
+                        (2000 - parseFloat(idoData.userContribution)) *
+                        1500
+                      ).toLocaleString()}{" "}
+                      more.
                     </p>
                   )}
                 </>
@@ -496,9 +518,12 @@ export function IDODashboard() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
-                      <div className="text-sm text-muted-foreground">pUSD Balance</div>
+                      <div className="text-sm text-muted-foreground">
+                        {currentPaymentToken.symbol} Balance
+                      </div>
                       <div className="text-2xl font-bold text-accent">
-                        {Number.parseFloat(pUSDBalance).toLocaleString()} pUSD
+                        {Number.parseFloat(pUSDBalance).toLocaleString()}{" "}
+                        {currentPaymentToken.symbol}
                       </div>
                     </div>
                     <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
@@ -509,7 +534,7 @@ export function IDODashboard() {
                         {Number.parseFloat(
                           idoData.userContribution
                         ).toLocaleString()}{" "}
-                        pUSD
+                        {currentPaymentToken.symbol}
                       </div>
                     </div>
                     <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
@@ -535,10 +560,11 @@ export function IDODashboard() {
                       </div>
                       <div className="text-sm text-muted-foreground">
                         You have successfully contributed{" "}
+                        {CurrencyHelpers.toNaira(idoData.userContribution)} (
                         {Number.parseFloat(
                           idoData.userContribution
                         ).toLocaleString()}{" "}
-                        PAU Dollar (pUSD) to the TRUTH Token IDO.
+                        {currentPaymentToken.symbol}) to the TRUTH Token IDO.
                       </div>
                     </div>
                   )}

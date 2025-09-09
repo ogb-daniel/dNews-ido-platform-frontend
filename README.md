@@ -153,13 +153,19 @@ await idoContract.buyTokens(ethers.parseEther("100")) // Buy with 100 pUSD
 ### Token Economics
 - **Total Supply**: 1,000,000,000 TRUTH
 - **IDO Allocation**: 150,000,000 TRUTH (15%)
-- **Token Price**: 1 pUSD per TRUTH
-- **Hard Cap**: 22,500 pUSD
-- **Soft Cap**: 7,500 pUSD
+- **Token Price**: 1 pUSD per TRUTH (₦1,500 per TRUTH)
+- **Hard Cap**: 22,500 pUSD (₦33,750,000)
+- **Soft Cap**: 7,500 pUSD (₦11,250,000)
+- **Primary Target**: Raise ₦10-30 million Nigerian Naira for development
 
 ### Contribution Limits
-- **Minimum**: 10 pUSD
-- **Maximum**: 2,000 pUSD per address
+- **Minimum**: 10 pUSD (₦15,000)
+- **Maximum**: 2,000 pUSD per address (₦3,000,000)
+
+### Currency Context
+- **pUSD Token**: Blockchain representation of Nigerian Naira value
+- **Exchange Rate**: 1 pUSD = ₦1,500 (fixed for IDO)
+- **Purpose**: Enable blockchain-based fundraising while targeting Naira amounts
 
 ### Sale Phases
 1. **Preparation**: Contract deployment and setup

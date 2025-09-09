@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useIDO } from "@/contexts/IDOContext";
+import { CurrencyHelpers, PAYMENT_TOKENS } from "@/lib/contracts";
 import {
   Newspaper,
   Shield,
@@ -99,10 +100,10 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 animate-slide-up">
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">
-                {Number.parseFloat(idoData.totalRaised).toLocaleString()} pUSD
+                {CurrencyHelpers.toNaira(idoData.totalRaised)}
               </div>
               <div className="text-sm text-muted-foreground">
-                Raised (PAU Dollar)
+                Raised
               </div>
             </div>
             <div className="hidden sm:block w-px h-8 bg-border"></div>
@@ -111,15 +112,6 @@ export default function HomePage() {
                 {Number.parseFloat(idoData.tokensRemaining).toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground">Tokens Left</div>
-            </div>
-            <div className="hidden sm:block w-px h-8 bg-border"></div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-accent">
-                {idoData.tokenPrice} pUSD
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Per Token (PAU Dollar)
-              </div>
             </div>
           </div>
         </section>

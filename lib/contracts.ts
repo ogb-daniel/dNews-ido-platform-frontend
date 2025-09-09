@@ -90,3 +90,93 @@ export function getTruthTokenContract(
 ) {
   return new ethers.Contract(CONTRACTS.TRUTH, ERC20_ABI, provider);
 }
+
+// Payment token configuration
+export interface PaymentToken {
+  symbol: string;
+  name: string;
+  address: string;
+  decimals: number;
+  nairaRate: number; // How much 1 token is worth in Naira
+  truthRate: number; // How much 1 token gets you in TRUTH tokens
+}
+
+// Supported payment tokens
+export const PAYMENT_TOKENS: { [key: string]: PaymentToken } = {
+  pUSD: {
+    symbol: 'pUSD',
+    name: 'PAU Dollar',
+    address: CONTRACTS.PAUSD,
+    decimals: 0,
+    nairaRate: 1500, // 1 pUSD = ₦1,500
+    truthRate: 1, // 1 pUSD = 1 TRUTH
+  },
+  // Future tokens can be added here
+  // USDT: {
+  //   symbol: 'USDT',
+  //   name: 'Tether USD',
+  //   address: '0x...',
+  //   decimals: 6,
+  //   nairaRate: 1600, // 1 USDT = ₦1,600
+  //   truthRate: 1.067, // 1 USDT = 1.067 TRUTH
+  // }
+};
+
+// Currency conversion utilities
+export const CurrencyHelpers = {
+  // Convert payment token amount to Naira
+  toNaira: (tokenAmount: string, tokenSymbol: string = 'pUSD'): string => {
+    const token = PAYMENT_TOKENS[tokenSymbol];
+    if (!token) throw new Error(`Unsupported payment token: ${tokenSymbol}`);
+    
+    const amount = parseFloat(tokenAmount);
+    const naira = amount * token.nairaRate;
+    return naira.toLocaleString('en-NG', { 
+      style: 'currency', 
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0 
+    });
+  },
+
+  // Convert payment token amount to TRUTH tokens
+  toTruth: (tokenAmount: string, tokenSymbol: string = 'pUSD'): string => {
+    const token = PAYMENT_TOKENS[tokenSymbol];
+    if (!token) throw new Error(`Unsupported payment token: ${tokenSymbol}`);
+    
+    const amount = parseFloat(tokenAmount);
+    const truth = amount * token.truthRate;
+    return truth.toFixed(2);
+  },
+
+  // Format Naira amount
+  formatNaira: (amount: number): string => {
+    return amount.toLocaleString('en-NG', { 
+      style: 'currency', 
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0 
+    });
+  },
+
+  // Get payment token info
+  getPaymentToken: (symbol: string): PaymentToken => {
+    const token = PAYMENT_TOKENS[symbol];
+    if (!token) throw new Error(`Unsupported payment token: ${symbol}`);
+    return token;
+  },
+
+  // Get all supported payment tokens
+  getSupportedTokens: (): PaymentToken[] => {
+    return Object.values(PAYMENT_TOKENS);
+  },
+
+  // Calculate TRUTH token price in Naira for a specific payment token
+  getTruthPriceInNaira: (paymentTokenSymbol: string = 'pUSD'): number => {
+    const token = PAYMENT_TOKENS[paymentTokenSymbol];
+    if (!token) throw new Error(`Unsupported payment token: ${paymentTokenSymbol}`);
+    
+    // Price of 1 TRUTH in Naira = (1 / truthRate) * nairaRate
+    return (1 / token.truthRate) * token.nairaRate;
+  },
+};
