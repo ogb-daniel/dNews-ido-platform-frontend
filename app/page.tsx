@@ -102,9 +102,7 @@ export default function HomePage() {
               <div className="text-2xl font-bold text-primary">
                 {CurrencyHelpers.toNaira(idoData.totalRaised)}
               </div>
-              <div className="text-sm text-muted-foreground">
-                Raised
-              </div>
+              <div className="text-sm text-muted-foreground">Raised</div>
             </div>
             <div className="hidden sm:block w-px h-8 bg-border"></div>
             <div className="text-center">
@@ -262,11 +260,27 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  window.open(
+                    "https://docs.google.com/document/d/1RH717kHeiHGI3UgLnJrD4LKGwStXT9gP8c39cWJpNDc/edit?usp=sharing"
+                  )
+                }
+              >
                 <ExternalLink className="h-4 w-4 mr-1" />
                 Whitepaper
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  window.open(
+                    "https://docs.google.com/document/d/1wPDdUleM5FNbJJtP_6k1iVfFaPTUG10U7sjkD9Q3YC4/edit?usp=sharing"
+                  )
+                }
+              >
                 <ExternalLink className="h-4 w-4 mr-1" />
                 Documentation
               </Button>
